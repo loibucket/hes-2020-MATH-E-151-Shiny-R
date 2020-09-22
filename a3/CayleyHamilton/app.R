@@ -11,6 +11,10 @@ stylesheet <- tags$head(tags$style(HTML('
       font-weight: bold;
       font-size: 24px;
     }
+    td{
+      padding-left:5px;
+      padding-right:5px
+    }
   ')
 ))
 #The user interface
@@ -123,11 +127,12 @@ server <- function(session, input, output) {
     clearFlex()
     #Create the necessary buttons and an explanatory message.
     output$ctrl1 <- renderUI(actionBttn("btnrect","Random Matrix"))
-    output$ctrl2 <- renderUI(actionBttn("btnthree","Random Matrix, 3 eigenvalues"))
+    output$ctrl2 <- renderUI(actionBttn("btnthree","Random Matrix with 3 eigenvalues"))
   })
   
 #Make a random matrix M whose columns sum to zero
   observeEvent(input$btnrect, {
+    clearFlex()
     eigenvalues <<- c()
     eigenvalues <<- makeMatrix()
     matrixOutput()
@@ -135,6 +140,7 @@ server <- function(session, input, output) {
   
 #Make a random matrix M whose columns sum to zero
   observeEvent(input$btnthree, {
+    clearFlex()
     eigenvalues <<- c()
     while(length(eigenvalues)!=3){
       eigenvalues <<- makeMatrix()
@@ -181,11 +187,11 @@ makeMatrix <- function(){
   
   #t^2
   #-i-e-a
-  p2 <<- -(-i-e-a)
+  p2 <<- i+e+a
   
   #t
   #ei -fh +ai +ea -db -cg
-  p1 <<- -(e*i -f*h +a*i +e*a -d*b -c*g)
+  p1 <<- -e*i +f*h -a*i -e*a +d*b +c*g
   
   #1
   p0 <<- e*a*i -a*f*h +b*f*g -b*d*i +c*d*h -e*c*g
@@ -225,13 +231,18 @@ makeMatrix <- function(){
   
 #Create and test a unit eigenvector
   observeEvent(input$btnunit,{
-    if(sum(B[,1]*B[,1])==0){
-      v1 <<- B[,1]
-    } else {v1 <<- B[,1]/sqrt(sum(B[,1]*B[,1]))}
+    if(sum(B[,1]*B[,1])!=0){
+      v1 <<- B[,1]/sqrt(sum(B[,1]*B[,1]))
+    }else if(sum(B[,2]*B[,2])!=0){
+      v1 <<- B[,2]/sqrt(sum(B[,2]*B[,2]))
+    }else{
+      v1 <<- B[,3]/sqrt(sum(B[,3]*B[,3]))
+    }
+      
     output$ctrl4 <- renderUI(withTags(
       table(
         tr(
-          td(jaxI(paste0("\\lambda_1 = ",rts[length(rts)]," | "))),
+          td(jaxI(paste0("\\lambda_1 = ",rts[length(rts)]))),
           td(jax.vector(round(v1,3),name = "v_1")),
           td(jax.vector(round(A%*%v1,3),name = "Av_1")),
           td(jax.vector(round(rts[3]*v1,3),name = "\\lambda_1v_1"))
@@ -242,24 +253,39 @@ makeMatrix <- function(){
   
 #Make a matrix with all the eigenvectors
   observeEvent(input$btnall, {
+    
     x <<-(A-rts[1]*matI)%*%(A-rts[3]*matI)%*%c(1,0,0)
-    if (sum(x)==0){
-      v2 <<- x
-    } else {v2 <<- x/sqrt(sum(x^2))}
+    y <<-(A-rts[1]*matI)%*%(A-rts[3]*matI)%*%c(0,1,0)
+    z <<-(A-rts[1]*matI)%*%(A-rts[3]*matI)%*%c(0,0,1)
+    if (sum(x)!=0){
+      v2 <<- x/sqrt(sum(x^2))
+    } else if(sum(y)!=0){
+      v2 <<- y/sqrt(sum(y^2))
+    } else {
+      v2 <<- z/sqrt(sum(z^2))
+    }
+    
     x <<-(A-rts[2]*matI)%*%(A-rts[3]*matI)%*%c(1,0,0)
-    if (sum(x)==0){
-      v3 <<- x
-    } else {v3 <<- x/sqrt(sum(x^2))}
+    y <<-(A-rts[2]*matI)%*%(A-rts[3]*matI)%*%c(0,1,0)
+    z <<-(A-rts[2]*matI)%*%(A-rts[3]*matI)%*%c(0,0,1)
+    if (sum(x)!=0){
+      v3 <<- x/sqrt(sum(x^2))
+    } else if(sum(y)!=0){
+      v3 <<- y/sqrt(sum(y^2))
+    } else {
+      v3 <<- z/sqrt(sum(z^2))
+    }
+    
     output$ctrl5 <- renderUI(withTags(
       table(
         tr(
-          td(jaxI(paste0("\\lambda_2 = ",rts[length(rts)-1]," | "))),
+          td(jaxI(paste0("\\lambda_2 = ",rts[length(rts)-1]))),
           td(jax.vector(round(v2,3),name = "v_2")),
           td(jax.vector(round(A%*%v2,3),name = "Av_2")),
           td(jax.vector(round(rts[2]*v2,3),name = "\\lambda_2v_2"))
         ),
         tr(
-          td(jaxI(paste0("\\lambda_3 = ",rts[length(rts)-2]," | "))),
+          td(jaxI(paste0("\\lambda_3 = ",rts[length(rts)-2]))),
           td(jax.vector(round(v3,3),name = "v_3")),
           td(jax.vector(round(A%*%v3,3),name = "Av_3")),
           td(jax.vector(round(rts[1]*v3,3),name = "\\lambda_3v_3"))
