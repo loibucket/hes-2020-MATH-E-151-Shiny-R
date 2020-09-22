@@ -1,0 +1,10 @@
+name: loiwebpage
+title:
+username:
+account: loiapps
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2757065
+bundleId: 3595104
+url: https://loiapps.shinyapps.io/loiwebpage/
+when: 1599270342.32623

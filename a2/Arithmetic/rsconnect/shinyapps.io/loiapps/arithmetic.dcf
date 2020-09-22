@@ -1,0 +1,10 @@
+name: arithmetic
+title:
+username:
+account: loiapps
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2793723
+bundleId: 3620405
+url: https://loiapps.shinyapps.io/arithmetic/
+when: 1599863007.0504
