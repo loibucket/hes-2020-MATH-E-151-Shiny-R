@@ -5,6 +5,6 @@ account: loiapps
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2891190
-bundleId: 3672201
+bundleId: 3672324
 url: https://loiapps.shinyapps.io/permute/
-when: 1601081940.3629
+when: 1601085696.33282

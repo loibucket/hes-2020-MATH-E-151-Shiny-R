@@ -3,18 +3,28 @@
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
+source("jaxmat.R")   #for displaying mathematics
+stylesheet <- tags$head(tags$style(HTML('
+    .main-header .logo {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-weight: bold;
+      font-size: 24px;
+      background-color: black;
+    }
+  ')
+))
 
 header <- dashboardHeader(title = "Per Mutations")
 sidebar <- dashboardSidebar(disable = TRUE)
-body <- dashboardBody(
+body <- dashboardBody(stylesheet,
   fluidRow(
     column(
       width = 4,
       box(
           width = NULL, height = 220,
-          h3("Input"),
+          h3("Input",HTML("&nbsp;&nbsp;&nbsp;"),actionBttn("btncalc","Calculate", color = "primary", size = "sm")),
           textInput("atext","a","(12)"),
-          textInput("btext","b","(13)")
+          textInput("btext","b","(13)"),
       ),
       box(
           width = NULL, height = 150,
@@ -82,7 +92,7 @@ body <- dashboardBody(
   )    
 )
 
-ui <- dashboardPage(header, sidebar, body)
+ui <- dashboardPage(header, sidebar, body, skin="yellow")
 
 
 source("permutecalc.R")    
@@ -119,11 +129,11 @@ server <- function(input, output) {
     output$powersab <- renderUI(HTML(Perm.powerString(ab)))
     output$powersba <- renderUI(HTML(Perm.powerString(ba)))
     
-    output$inva <- renderUI(HTML(Perm.inverse(input$atext)))
-    output$invb <- renderUI(HTML(Perm.inverse(input$btext)))
+    output$inva <- renderUI(jaxD(paste0("a^{-1} = ",Perm.inverse(input$atext))))
+    output$invb <- renderUI(jaxD(paste0("b^{-1} = ",Perm.inverse(input$btext))))
     
-    output$conja <- renderUI(HTML(Perm.conjugate(input$atext,input$btext)))
-    output$conjb <- renderUI(HTML(Perm.conjugate(input$btext,input$atext)))
+    output$conja <- renderUI(jaxD(paste0("aba^{-1} = ",Perm.conjugate(input$atext,input$btext))))
+    output$conjb <- renderUI(jaxD(paste0("bab^{-1} = ",Perm.conjugate(input$btext,input$atext))))
     
   })
 

@@ -78,13 +78,20 @@ Perm.powerString <- function(perm) {
 #You will need to write these last two functions.
 #Finds the inverse by stopping when the next power is the identity
 Perm.inverse <- function(perm) {
-  return(perm)
+  previous <- perm
+  power <- perm
+  while (power != "I") {
+    previous <- power
+    power <- Perm.multiply(power,perm)
+  }
+  return(previous)
 }
 #Perm.inverse("(123)(4689)")
 
 #Forms the conjugate xyx^(-1)
 Perm.conjugate <- function(x,y) {
-  return(x)
+  res = Perm.multiply(Perm.multiply(x,y),Perm.inverse(x))
+  return(res)
 }
 #Perm.conjugate("(24)(567)","(123)(4689)")
 
