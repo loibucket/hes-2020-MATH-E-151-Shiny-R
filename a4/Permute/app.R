@@ -1,5 +1,4 @@
-#PermutePartial
-#Change the name to Permutation when you finish the homework
+#Permute
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
@@ -100,8 +99,8 @@ source("permutecalc.R")
 
 server <- function(input, output) {
   
-  output$prodab <- renderUI("ab = (123)")
-  output$prodba <- renderUI("ba = (132)")
+  output$prodab <- renderUI("ab = (132)")
+  output$prodba <- renderUI("ba = (123)")
   
   output$powersa <- renderUI(HTML(paste("(12)","I",sep = "<br/>")))
   output$powersb <- renderUI(HTML(paste("(13)","I",sep = "<br/>")))

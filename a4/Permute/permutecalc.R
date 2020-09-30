@@ -53,7 +53,7 @@ Perm.multiply <- function(a,b){
   #Make a vector of the function values
   fval <- character(0)
   for (i in c("1","2","3","4","5","6","7","8","9")) {
-    fval <- c(fval, Perm.apply(Perm.apply(i,a),b) )
+    fval <- c(fval, Perm.apply(Perm.apply(i,b),a) )
   }
   #If input and output are equal we have the identity
   if (sum(fval != "1":"9") == 0) return("I")
