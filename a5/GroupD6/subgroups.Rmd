@@ -1,0 +1,113 @@
+---
+title: "Subgroups"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+#D6 group
+source("permutecalc.R")
+source("d6calc.R")
+df=makeD6data("gray90")
+perms=df[[2]]
+perms
+```
+
+```{r}
+for (val in 1:12){
+  print(perms[val])
+}
+```
+
+```{r}
+print("subgroups of D6")
+subs = list()
+for(iter in 1:12){
+  start=perms[iter]
+  print(paste(iter,": start",start))
+  subgroup = c(start)
+  subgroup = unique(append(subgroup,Perm.multiply(start,start)))
+  while(TRUE){
+    len = length(subgroup)
+    new = c()
+    for(p in subgroup){
+      for(q in subgroup){
+        new=append(new,Perm.multiply(p,q))
+      }
+    }
+    subgroup = sort(unique(append(subgroup,new)))
+    print(subgroup)
+    if (length(subgroup) == len){break}
+  }
+  subs[[iter]]=subgroup
+  #print(length(subgroup))
+  #print(subgroup)
+}
+subs=unique(subs)
+subs
+```
+
+```{r}
+print("cosets")
+for(c in c(3)){
+  print('-----')
+  print(subs[[c]])
+  lefts = list()
+  rights = list()
+  i = 1
+  for(p in perms){
+    loset = c()
+    roset = c()
+    if (p %in% subs[[c]]){
+        #print(paste("in",p))
+    } else {
+        for (s in subs[[c]]){
+          #print(paste(p,s,Perm.multiply(p,s)))
+          loset=append(loset,(Perm.multiply(p,s)))
+          roset=append(roset,(Perm.multiply(s,p)))
+        }
+      lefts[[i]]=sort(loset)
+      rights[[i]]=sort(roset)
+      print(p)
+      print(paste0(c("L: ",p,":",loset)))
+      print(paste0(c("R: ",p,":",roset)))
+      i=i+1
+    }
+  }
+}
+print("lefts")
+unique(lefts)
+print("rights")
+unique(rights)
+```
+
+
+```{r}
+a="(12)"
+b="(13)"
+Perm.multiply(a,b)
+Perm.multiply(b,a)
+```

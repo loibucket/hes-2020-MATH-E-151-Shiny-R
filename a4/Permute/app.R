@@ -13,7 +13,7 @@ stylesheet <- tags$head(tags$style(HTML('
   ')
 ))
 
-header <- dashboardHeader(title = "Per Mutations")
+header <- dashboardHeader(title = "Loi Per Mutations", titleWidth = 300)
 sidebar <- dashboardSidebar(disable = TRUE)
 body <- dashboardBody(stylesheet,
   fluidRow(

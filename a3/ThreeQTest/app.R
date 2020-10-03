@@ -35,7 +35,7 @@ stylesheet <- tags$head(tags$style(HTML('
   ')
 ))
 #The user interface
-header <- dashboardHeader(title = "3 Question Test",
+header <- dashboardHeader(title = "Loi's 3 Question Test",
                           titleWidth = 500)
 sidebar <- dashboardSidebar(disable = TRUE)
 body <- dashboardBody(

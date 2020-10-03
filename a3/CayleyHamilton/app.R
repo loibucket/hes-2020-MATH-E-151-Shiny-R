@@ -18,7 +18,7 @@ stylesheet <- tags$head(tags$style(HTML('
   ')
 ))
 #The user interface
-header <- dashboardHeader(title = "Cayley-Hamilton Matrix",
+header <- dashboardHeader(title = "Cayley-Hamilton-Loi Matrix",
                           titleWidth = 500)
 sidebar <- dashboardSidebar(disable = TRUE)
 body <- dashboardBody(

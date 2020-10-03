@@ -5,7 +5,16 @@ library(shinydashboard)
 library(shinyWidgets)
 library(DT)
 #The user interface
-header <- dashboardHeader(title = "D4 According to Biggs")
+stylesheet <- tags$head(tags$style(HTML('
+    .main-header .logo {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-weight: bold;
+      font-size: 34px;
+      background-color: black;
+    }
+  ')
+))
+header <- dashboardHeader(title = "D4 According to Biggs and Loi",titleWidth=800)
 sidebar <- dashboardSidebar(
   width = 100,
   actionButton("btninit", "Initialize"),
@@ -18,7 +27,7 @@ sidebar <- dashboardSidebar(
   actionButton("btny","Apply y"),
   actionButton("btnz","Apply z")
 )
-body <- dashboardBody(
+body <- dashboardBody(stylesheet,
   fluidRow(
     column(
       width = 12,
