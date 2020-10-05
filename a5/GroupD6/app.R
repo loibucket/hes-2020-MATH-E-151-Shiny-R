@@ -46,22 +46,22 @@ ui <- dashboardPage(
                        width = NULL,
                        height = 100,
                        title = "Subgroups",
-                       buttonRow2(
-                           inputIds = c("btnC3","btnC6"),
-                           labels = c("Show C3","Show C6"),
+                       buttonRow4(
+                           inputIds = c("btnC3","btnC6","btnS3","btnV4"),
+                           labels = c("Show C3","Show C6","Show S3","Show V4"),
                            btnStyle = "padding:4px;font-size:100%"
                        )  #agb
                    ),#box
-                   box(
-                       width = NULL,
-                       height = 100,
-                       title = "Cosets",
-                       buttonRow2(
-                           inputIds = c("btnLC", "btnRC"),
-                           labels = list("Left Cosets", "Right Cosets"),
-                           btnStyle = "padding:4px;font-size:100%"
-                       )  #agb
-                   ),
+                   # box(
+                   #     width = NULL,
+                   #     height = 100,
+                   #     title = "Cosets",
+                   #     buttonRow2(
+                   #         inputIds = c("btnLC", "btnRC"),
+                   #         labels = list("Left Cosets", "Right Cosets"),
+                   #         btnStyle = "padding:4px;font-size:100%"
+                   #     )  #agb
+                   # ),
                    box(
                      width = NULL,
                      height = 120,
@@ -217,6 +217,22 @@ server <- function(input, output, session) {
     })
     observeEvent(input$btnC6,{
       subgroup <<- c(1,2,3,4,5,6)
+      mark.subgroup()
+      showButtons()
+    })
+    # S3
+    # "(12)(36)(45)"  "(14)(23)(56)"  "(16)(25)(34)"  "(135)(246)"  "(153)(264)"  "I"
+    #     11               10              12             3              5           1
+    observeEvent(input$btnS3,{
+      subgroup <<- c(1,3,5,10,11,12)
+      mark.subgroup()
+      showButtons()
+    })
+    # V4
+    # "(14)(25)(36)"  "(16)(25)(34)"  "(13)(46)"  "I"
+    #      4               12            7         1
+    observeEvent(input$btnV4,{
+      subgroup <<- c(1,4,7,12)
       mark.subgroup()
       showButtons()
     })

@@ -5,6 +5,6 @@ account: loiapps
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2938099
-bundleId: 3699151
+bundleId: 3702478
 url: https://loiapps.shinyapps.io/groupd6/
-when: 1601750791.74684
+when: 1601864672.87005
