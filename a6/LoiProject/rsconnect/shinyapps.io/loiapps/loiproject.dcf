@@ -1,0 +1,10 @@
+name: loiproject
+title:
+username:
+account: loiapps
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2991654
+bundleId: 3727766
+url: https://loiapps.shinyapps.io/loiproject/
+when: 1602471011.28479
