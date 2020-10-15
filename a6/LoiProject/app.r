@@ -2,6 +2,8 @@
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
+Sys.setenv(RGL_USE_NULL = TRUE)  #suppress popup 3D display
+library("rgl")      #for 3D plotting
 library(shinyjs)
 source("jaxmat.R")   #for displaying mathematics
 source("permutecalc.R")   
