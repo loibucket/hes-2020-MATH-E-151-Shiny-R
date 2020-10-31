@@ -1,0 +1,102 @@
+---
+title: "scratch"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+source("fieldcalc.R")
+
+#x2_2 = c(0,-2%%5)
+#x2_3 = c(0,-3%%5)
+
+#x2_x1 = c(-1%%5,-1%%5)
+#x2_x2 = c(-1%%5,-2%%5)
+
+#x2_2x3 = c(-2%%5,-3%%5)
+#x2_2x4 = c(-2%%5,-4%%5)
+
+#x2_3x3 = c(-3%%5,-3%%5)
+#x2_3x4 = c(-3%%5,-4%%5)
+
+#x2_4x1 = c(-4%%5,-1%%5)
+#x2_4x2 = c(-4%%5,-2%%5)
+
+x2_2 = rev(c(0,-2%%5))
+x2_3 = rev(c(0,-3%%5))
+
+x2_x1 = rev(c(-1%%5,-1%%5))
+x2_x2 = rev(c(-1%%5,-2%%5))
+
+x2_2x3 = rev(c(-2%%5,-3%%5))
+x2_2x4 = rev(c(-2%%5,-4%%5))
+
+x2_3x3 = rev(c(-3%%5,-3%%5))
+x2_3x4 = rev(c(-3%%5,-4%%5))
+
+x2_4x1 = rev(c(-4%%5,-1%%5))
+x2_4x2 = rev(c(-4%%5,-2%%5))
+
+x2_2
+x2_3
+
+x2_x1
+x2_x2
+
+x2_2x3
+x2_2x4
+
+x2_3x3 
+x2_3x4 
+
+x2_4x1
+x2_4x2 
+
+#powerTable <- function(p,n, gen, replace) {
+plist = list()
+
+plist[[1]] = x2_2
+plist[[2]] = x2_3
+plist[[3]] = x2_x1
+plist[[4]] = x2_x2
+plist[[5]] = x2_2x3
+plist[[6]] = x2_2x4
+plist[[7]] = x2_3x3
+plist[[8]] = x2_3x4
+plist[[9]] = x2_4x1
+plist[[10]] = x2_4x2
+
+plist[[1]][1]
+plist[[1]][2]
+```
+
+```{r}
+source("fieldcalc.R")
+powerTable(5,2,c(0,1),c(3,0))
+```
+
+
+

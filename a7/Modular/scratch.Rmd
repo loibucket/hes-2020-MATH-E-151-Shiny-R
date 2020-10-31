@@ -1,0 +1,132 @@
+---
+title: "scratch"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library('numbers')
+q = 10
+vector = 1:q-1
+
+coprimes = numeric()
+for(i in vector){
+  if(GCD(i,q)==1){
+    coprimes = c(coprimes,i)
+  }
+}
+
+print(coprimes)
+```
+
+
+```{r}
+library('gmp')
+z = 1:52
+z = z[isprime(1:52)==0]
+z
+```
+
+```{r}
+library('gmp')
+primes = 1:52
+primes = primes[isprime(1:52)!=0]
+primes
+2 %in% primes
+```
+
+```{r}
+library('gmp')
+isprime(4)
+```
+
+
+```{r}
+q = 10
+num = 9
+
+level <- function(num, q) {
+
+  lvl = 1
+  lvlOneRemainder = num %% q
+  remainder = num %% q
+
+  while(remainder!=1){
+    lvl = lvl + 1
+    remainder = (lvlOneRemainder*remainder)%%q
+  }
+  return(lvl)
+}
+
+level(num,q)
+
+num^level(num,q) %% q
+
+```
+```{r}
+11^2 %% 15
+```
+```{r}
+
+q = 10
+vec = 1:q-1
+
+coPrime <- function(vec, q) {
+  coprimes = numeric()
+  for (i in vec) {
+    if (GCD(i, q) == 1) {
+      coprimes = c(coprimes, i)
+    }
+  }
+  return(coprimes)
+}
+
+coprimes = coPrime(vec,q)
+coprimes
+```
+
+```{r}
+library(dplyr)
+
+ordering <-function(coprimes,q){
+  orders = double()
+  for(c in coprimes){
+    orders = c(orders, level(c,q))
+  }
+  
+  #orders
+  ord_df = data.frame(orders)
+  cnt = count(ord_df,orders)
+  h = cnt[['n']]
+  names(h)=cnt[['orders']]
+  barplot(h)
+}
+
+ordering(coprimes,q)
+```
+
+
+
