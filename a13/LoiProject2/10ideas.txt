@@ -1,0 +1,27 @@
+Loi Cheng
+10/13/2020
+
+Write a short R Shiny app on a topic that might be appropriate for a final
+project.
+
+Include a pdf file that explains your choice of topic and that lists ten ideas
+from this course that you have incorporated into your app. A list of ten will
+get you full credit, but please don’t make the ideas too trivial. Express an
+opinion about whether you app could be extended into a more significant
+project.
+
+The choice of topic is something that might be useful for math education.  It has tests on basic arithmetic, matrix operations, and cyclic groups.  The app could be extended to be more significant by adding more variety to the tests.
+
+1. modals
+2. mathjax
+3. stylesheet
+4. sliders
+5. matrix notation
+6. matrix multiplication
+7. buttons
+8. cyclic notation
+9. cyclic multiplication
+10. dataframe
+11. circle routes
+
+https://loiapps.shinyapps.io/loiproject/

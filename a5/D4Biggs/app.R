@@ -58,7 +58,7 @@ server <- function(session, input, output) {
   #Variables that are shared among server functions
   D4DF <- D4.makeDataFrame()
   config <- "ABCD"
-    #Initialization
+  #Initialization
   output$configs <- renderPlot(D4.showConfigs(D4DF))
   output$square <- renderPlot(D4.showSquare(config))
   tbl <-outer(D4DF$name,D4DF$name,vD4.multiply,DF=D4DF)
