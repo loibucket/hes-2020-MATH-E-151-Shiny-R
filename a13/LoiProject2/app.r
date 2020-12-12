@@ -115,8 +115,8 @@ body <- dashboardBody(fluidRow(
   
   column(
     width = 4, 
-    actionBttn("modalMatrixBtn","Hamiltonian Challenge!"),
-    sliderInput("matSlider", "set highest number",1, 50, 10 ),
+    actionBttn("modalHamBtn","Hamiltonian Challenge!"),
+    sliderInput("hamSlider", "set max vertices",1, 50, 10 ),
   ),
   
   column(
@@ -158,6 +158,306 @@ ui <-
 #Additional functions are OK here, but no variables
 
 server <- function(session, input, output) {
+  
+  
+  
+  ##Hamiltonian action
+  hamVisited = 0
+  observeEvent(input$modalHamBtn, {
+    score <<- 0
+    cnt <<- 0
+    mode <<- "ham"   
+    clearText()
+    showModalHam()
+  })
+  
+  dfHam = data.frame(matrix(ncol = 2, nrow = 0))  
+  showModalHam <- function() {
+    
+    #modal
+    showModal(modalDialog(id = "modalArith",
+                          h3("Hamiltonian Walk!"),
+                          plotOutput("walk",click = "plot_click",width=500,height=500),
+                          h3(numericInput("answerInput", "Visited:", ""), actionButton("submitBtn","Submit")),
+                          h3(uiOutput("msgOutput")),
+                          footer = tagList(
+                            h3(uiOutput("scoreOutput")),
+                            actionButton("nextBtn","Next"),
+                            actionButton("closeBtn","Exit")
+                          ),
+    ))
+    
+    #make points
+    g = list()
+    for(i in 1:input$hamSlider){
+      g[[i]] = sample(1:5,2,replace=TRUE)
+    }
+    
+    dfHam <<- data.frame(matrix(ncol = 2, nrow = 0))  
+    dfHam <<- rbind(dfHam,sample(g,1)[[1]])
+    
+    #sample points
+    for(i in 1:input$hamSlider){
+      s = sample(g,1)[[1]]
+      if(s[1]==tail(dfHam)[1,1] && s[2]==tail(dfHam,1)[1,2]){
+        #skip
+      } else {
+        dfHam <<- rbind(dfHam,s)
+      }
+    }
+    dfHam <<- cbind(dfHam,replicate(length(dfHam[,1]),"blue"))
+    colnames(dfHam) <<- c("x","y","bg")
+    
+    #create lines
+    dg=data.frame(matrix(ncol = 4, nrow = 0))
+    for(i in 1:(length(dfHam$x)+1)){
+      a = i%%length(dfHam$x)+1
+      b = (i+1)%%length(dfHam$x)+1
+      
+      xa = dfHam$x[a]
+      ya = dfHam$y[a]
+      
+      xb = dfHam$x[b]
+      yb = dfHam$y[b]
+      
+      if (xa == xb && ya == yb){
+        #same point, skip
+      }else if (xa == xb){
+        dg = rbind(dg,c(xa,min(ya,yb),xb,max(ya,yb)))
+      } else if (dfHam$x[a] < dfHam$x[b]){
+        dg = rbind(dg,c(xa,ya,xb,yb))
+      } else {
+        dg = rbind(dg,c(xb,yb,xa,ya))
+      }
+    }
+    
+    output$walk <- renderPlot({
+        drawPoints(dfHam)
+        drawLines(dg)
+      })
+    
+    ans<<-nrow(unique(dfHam))
+    updateTextInput(session,"answerInput",value="0")
+    disable("answerInput")
+    
+    #button display
+    shinyjs::hide("submitBtn")
+    shinyjs::show("nextBtn")
+  }
+  
+  udf=data.frame()
+  
+  #draw points
+  drawPoints = function(df){
+    #draw points
+    udf<<-unique(df)
+    row.names(udf) <- 1:nrow(udf)
+    plot(udf$y~udf$x,xlim=c(0,5),ylim=c(0,5),asp=1,pch = 21,cex = 5,bg=udf$bg,xlab="x",ylab="y")
+  }
+  
+  udg=data.frame()
+  
+  #draw lines
+  drawLines = function(dg){
+    udg <<- unique(dg)
+    colnames(udg) = c("a","b","c","d")
+    for(i in 1:(length(udg$a))){
+      segments(udg$a[i],udg$b[i],udg$c[i],udg$d[i])
+    }
+  }
+
+  observeEvent(input$plot_click,{
+    x=as.integer(round(input$plot_click$x,0))
+    y=as.integer(round(input$plot_click$y,0))
+    output$msgOutput = renderText(paste(x,y))
+    
+    #check if visit able
+    w=which(udf$x==x&udf$y==y)
+    if (udf$bg[w] != "yellow"){
+      if(sum(udf$bg=="red")!=0){
+        output$msgOutput = renderText(paste(x,y,"not nearby node!"))
+        return()
+      }
+    }
+    
+    ##clear yellow
+    for(i in 1:length(udf$bg)){
+      if(udf$bg[i]=="yellow"){
+        udf$bg[i]<<-"blue"
+      }
+    }
+    
+    #mark visted
+    udf$bg[w]<<-"red"   
+    
+    #get neighbor verts
+    rows = as.integer(rownames(dfHam[(dfHam$x==x&dfHam$y==y),]))
+
+    len = length(dfHam$bg)
+    for (r in rows){
+      
+      #mark previous row
+      pre=(r-1)%%len
+      if(pre<=0){pre=pre+len}
+      preCond = udf$x==dfHam$x[pre] & udf$y==dfHam$y[pre]
+      w = which(preCond,TRUE)
+      if(udf$bg[w]!="red"){
+        udf$bg[w]<<-"yellow"
+      }
+
+      #mark next row
+      post=(r+1)%%len
+      if(post<=0){post=post+len}
+      postCond = udf$x==dfHam$x[post] & udf$y==dfHam$y[post]
+      w = which(postCond,TRUE)
+      if(udf$bg[w]!="red"){
+        udf$bg[w]<<-"yellow"
+      }
+    }
+  
+    output$walk <- renderPlot({
+      drawPoints(udf)
+      drawLines(udg)
+    })
+    
+    v=sum(udf$bg=="red")
+    updateTextInput(session,"answerInput",value=v)
+    if(v==ans){
+      delay(200,showAnswer())
+    }
+  })
+  
+  
+  ##D4 action
+  d4Turn = 1
+  config = "ABCD"
+  
+  observeEvent(input$modalD4Btn, {
+    score <<- 0
+    cnt <<- 0
+    mode <<- "d4"    
+    clearText()
+    showModalD4()
+  })
+  
+  showModalD4 <- function() { 
+    d4Turn <<- 1
+    showModal(modalDialog(id = "modalD4",
+                          size="l",
+                          h1("D4!"),
+                          plotOutput("configs", height=200),
+                          fluidRow(
+                            column(6,h1("Match This!")),
+                            column(6,h1("To This!"))
+                          ),
+                          fluidRow(
+                            column(6,plotOutput("square", height=200)),
+                            column(6,plotOutput("squaretwo", height=200))
+                          ),
+                          actionButton("btnr","Apply r"),
+                          actionButton("btns","Apply s"),
+                          actionButton("btnt","Apply t"),
+                          actionButton("btnw","Apply w"),
+                          actionButton("btnx","Apply x"),
+                          actionButton("btny","Apply y"),
+                          actionButton("btnz","Apply z"),
+                          h3(textOutput("turnId")),
+                          h3(textInput("answerInput", "", ""), actionButton("submitBtn","Submit")),
+                          h3(uiOutput("msgOutput")),
+                          footer = tagList(
+                            h3(uiOutput("scoreOutput")),
+                            actionButton("nextBtn","Next"),
+                            actionButton("closeBtn","Exit")
+                          )
+    ))
+    
+    D4DF <- D4.makeDataFrame()
+    output$configs <- renderPlot(D4.showConfigs(D4DF))
+    
+    updateTextInput(session,"answerInput",value="")
+    disable("answerInput")
+    
+    a = sample(c("i","r","s","t","w","x","y","z"),2)
+    
+    config <<- D4.apply(a[1],"ABCD")
+    output$square <- renderPlot(D4.showSquare(config))
+    
+    ans <<- D4.apply(a[2],"ABCD")
+    output$squaretwo <- renderPlot(D4.showSquare(ans))
+
+    #button display
+    shinyjs::show("submitBtn")
+    shinyjs::hide("nextBtn")
+    
+    output$turnId <- renderText(paste("Turn", d4Turn))
+  }
+  
+  #do not put observeEvent inside other functions, it will stack if that func is called multiple times
+  observeEvent(input$btnr,{
+    config <<- D4.apply("r",config)
+    updateD4(config)
+  })
+  observeEvent(input$btns,{
+    config <<- D4.apply("s",config)
+    updateD4(config)
+  })
+  observeEvent(input$btnt,{
+    config <<- D4.apply("t",config)
+    updateD4(config)
+  })
+  observeEvent(input$btnw,{
+    config <<- D4.apply("w",config)
+    updateD4(config)
+  })
+  observeEvent(input$btnx,{
+    config <<- D4.apply("x",config)
+    updateD4(config)
+  })
+  observeEvent(input$btny,{
+    config <<- D4.apply("y",config)
+    updateD4(config)
+  })
+  observeEvent(input$btnz,{
+    config <<- D4.apply("z",config)
+    updateD4(config)
+  })
+  
+  updateD4 <- function(config){
+    output$square <- renderPlot(D4.showSquare(config))
+    updateTextInput(session,"answerInput",value=config)
+    d4Turn <<- d4Turn+1
+    if (d4Turn>input$d4Slider){
+      #shinyjs::hide("submitBtn")
+      shinyjs::hide("btnr")
+      shinyjs::hide("btns")
+      shinyjs::hide("btnt")
+      shinyjs::hide("btnw")
+      shinyjs::hide("btnx")
+      shinyjs::hide("btny")
+      shinyjs::hide("btnz")
+      #showAnswer()
+      output$turnId <- renderText(paste("Out of Turns!"))
+    } else {
+      output$turnId <- renderText(paste("Turn",d4Turn))
+    }
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   #Variables that are shared among server functions (use <<-)
   ans = 0
   score = 0
@@ -175,18 +475,19 @@ server <- function(session, input, output) {
   ##show answer
   showAnswer <- function(){
     if(is.na(input$answerInput) || input$answerInput != ans){
-      output$msgOutput <- renderUI(HTML(paste("<b style='color:red;'>",ans,"incorrect!","</b>")))
+      output$msgOutput <- renderUI(HTML(paste("<b style='color:red;'>","incorrect!",ans,"</b>")))
     } else {
-      output$msgOutput <- renderUI(HTML(paste("<b style='color:green;'>",ans,"correct!","</b>")))
+      output$msgOutput <- renderUI(HTML(paste("<b style='color:green;'>","correct!","</b>")))
       score <<- score+1
     }
     cnt <<- cnt+1
     f=""
+    shinyjs::show("nextBtn")
     if(score >= scoreLimit){
       f="Flight Awarded!"
+      shinyjs::hide("nextBtn")
     }
     output$scoreOutput = renderUI(paste(f,"score:",score," out of ",cnt))
-    shinyjs::show("nextBtn")
   }
   
   #next action
@@ -197,6 +498,7 @@ server <- function(session, input, output) {
     else if(mode=="matrix"){showModalMatrix()}
     else if(mode=="cyclic"){showModalCyclic()}
     else if(mode=="d4"){showModalD4()}
+    else if(mode=="ham"){showModalHam()}
     else(removeModal())
   })
   
@@ -341,119 +643,7 @@ server <- function(session, input, output) {
     shinyjs::hide("nextBtn")
   }
   
-  ##D4 action
-  
-  d4Turn = 1
-  config = "ABCD"
-  
-  observeEvent(input$modalD4Btn, {
-    score <<- 0
-    cnt <<- 0
-    mode <<- "d4"    
-    clearText()
-    showModalD4()
-  })
-  
-  showModalD4 <- function() { 
-    d4Turn <<- 1
-    showModal(modalDialog(id = "modalD4",
-                          size="l",
-                          h1("D4!"),
-                          plotOutput("configs", height=200),
-                          fluidRow(
-                            column(6,h1("Match This!")),
-                            column(6,h1("To This!"))
-                          ),
-                          fluidRow(
-                                  column(6,plotOutput("square", height=200)),
-                                  column(6,plotOutput("squaretwo", height=200))
-                                  ),
-                          actionButton("btnr","Apply r"),
-                          actionButton("btns","Apply s"),
-                          actionButton("btnt","Apply t"),
-                          actionButton("btnw","Apply w"),
-                          actionButton("btnx","Apply x"),
-                          actionButton("btny","Apply y"),
-                          actionButton("btnz","Apply z"),
-                          h3(textOutput("turnId")),
-                          h3(textInput("answerInput", "", ""), actionButton("submitBtn","Submit")),
-                          h3(uiOutput("msgOutput")),
-                          footer = tagList(
-                            h3(uiOutput("scoreOutput")),
-                            actionButton("nextBtn","Next"),
-                            actionButton("closeBtn","Exit")
-                          )
-    ))
-    
-    D4DF <- D4.makeDataFrame()
-    output$configs <- renderPlot(D4.showConfigs(D4DF))
-    
-    updateTextInput(session,"answerInput",value="")
-    disable("answerInput")
-    
-    a = sample(c("i","r","s","t","w","x","y","z"),2)
-    
-    config <<- D4.apply(a[1],"ABCD")
-    output$square <- renderPlot(D4.showSquare(config))
-    
-    ans <<- D4.apply(a[2],config)
-    output$squaretwo <- renderPlot(D4.showSquare(ans))
 
-    #button display
-    shinyjs::show("submitBtn")
-    shinyjs::hide("nextBtn")
-    
-    output$turnId <- renderText(paste("Turn", d4Turn))
-  }
-  
-  #do not put observeEvent inside other functions, it will stack if that func is called multiple times
-  observeEvent(input$btnr,{
-    config <<- D4.apply("r",config)
-    updateD4(config)
-  })
-  observeEvent(input$btns,{
-    config <<- D4.apply("s",config)
-    updateD4(config)
-  })
-  observeEvent(input$btnt,{
-    config <<- D4.apply("t",config)
-    updateD4(config)
-  })
-  observeEvent(input$btnw,{
-    config <<- D4.apply("w",config)
-    updateD4(config)
-  })
-  observeEvent(input$btnx,{
-    config <<- D4.apply("x",config)
-    updateD4(config)
-  })
-  observeEvent(input$btny,{
-    config <<- D4.apply("y",config)
-    updateD4(config)
-  })
-  observeEvent(input$btnz,{
-    config <<- D4.apply("z",config)
-    updateD4(config)
-  })
-  
-  updateD4 <- function(config){
-    output$square <- renderPlot(D4.showSquare(config))
-    updateTextInput(session,"answerInput",value=config)
-    d4Turn <<- d4Turn+1
-    if (d4Turn>input$d4Slider){
-      shinyjs::hide("submitBtn")
-      shinyjs::hide("btnr")
-      shinyjs::hide("btns")
-      shinyjs::hide("btnt")
-      shinyjs::hide("btnw")
-      shinyjs::hide("btnx")
-      shinyjs::hide("btny")
-      shinyjs::hide("btnz")
-      showAnswer()
-      return()
-    }
-    output$turnId <- renderText(paste("Turn",d4Turn))
-  }
 
   ##Airmiles
   
