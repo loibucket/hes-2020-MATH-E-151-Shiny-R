@@ -83,7 +83,7 @@ body <- dashboardBody(fluidRow(
   
   column(
     width = 4, 
-    actionBttn("modalArithBtn","Arthmetic Challenge!"),
+    actionBttn("modalArithBtn","Arithmetic Challenge!"),
     sliderInput("aSlider", "set highest a",1, 50, 10 ),
     sliderInput("bSlider", "set highest b",1, 50, 10 ),
   ),
@@ -116,14 +116,13 @@ body <- dashboardBody(fluidRow(
   column(
     width = 4, 
     actionBttn("modalHamBtn","Hamiltonian Challenge!"),
-    sliderInput("hamSlider", "set max vertices",1, 50, 10 ),
+    sliderInput("hamSlider", "set max vertices",1, 10, 5 ),
   ),
   
   column(
     width = 4, 
-    actionBttn("modalCyclicBtn","Euler Challenge!"),
-    sliderInput("cyclicASlider", "set left digits",2, 9, 2 ),
-    sliderInput("cyclicBSlider", "set right digits",2, 9, 2 ),
+    actionBttn("modalEulerBtn","Euler Challenge!"),
+    sliderInput("eulerSlider", "set max edges",1, 10, 5 ),
   ),
   
   column(width=4,
@@ -158,176 +157,7 @@ ui <-
 #Additional functions are OK here, but no variables
 
 server <- function(session, input, output) {
-  
-  
-  
-  ##Hamiltonian action
-  hamVisited = 0
-  observeEvent(input$modalHamBtn, {
-    score <<- 0
-    cnt <<- 0
-    mode <<- "ham"   
-    clearText()
-    showModalHam()
-  })
-  
-  dfHam = data.frame(matrix(ncol = 2, nrow = 0))  
-  showModalHam <- function() {
-    
-    #modal
-    showModal(modalDialog(id = "modalArith",
-                          h3("Hamiltonian Walk!"),
-                          plotOutput("walk",click = "plot_click",width=500,height=500),
-                          h3(numericInput("answerInput", "Visited:", ""), actionButton("submitBtn","Submit")),
-                          h3(uiOutput("msgOutput")),
-                          footer = tagList(
-                            h3(uiOutput("scoreOutput")),
-                            actionButton("nextBtn","Next"),
-                            actionButton("closeBtn","Exit")
-                          ),
-    ))
-    
-    #make points
-    g = list()
-    for(i in 1:input$hamSlider){
-      g[[i]] = sample(1:5,2,replace=TRUE)
-    }
-    
-    dfHam <<- data.frame(matrix(ncol = 2, nrow = 0))  
-    dfHam <<- rbind(dfHam,sample(g,1)[[1]])
-    
-    #sample points
-    for(i in 1:input$hamSlider){
-      s = sample(g,1)[[1]]
-      if(s[1]==tail(dfHam)[1,1] && s[2]==tail(dfHam,1)[1,2]){
-        #skip
-      } else {
-        dfHam <<- rbind(dfHam,s)
-      }
-    }
-    dfHam <<- cbind(dfHam,replicate(length(dfHam[,1]),"blue"))
-    colnames(dfHam) <<- c("x","y","bg")
-    
-    #create lines
-    dg=data.frame(matrix(ncol = 4, nrow = 0))
-    for(i in 1:(length(dfHam$x)+1)){
-      a = i%%length(dfHam$x)+1
-      b = (i+1)%%length(dfHam$x)+1
-      
-      xa = dfHam$x[a]
-      ya = dfHam$y[a]
-      
-      xb = dfHam$x[b]
-      yb = dfHam$y[b]
-      
-      if (xa == xb && ya == yb){
-        #same point, skip
-      }else if (xa == xb){
-        dg = rbind(dg,c(xa,min(ya,yb),xb,max(ya,yb)))
-      } else if (dfHam$x[a] < dfHam$x[b]){
-        dg = rbind(dg,c(xa,ya,xb,yb))
-      } else {
-        dg = rbind(dg,c(xb,yb,xa,ya))
-      }
-    }
-    
-    output$walk <- renderPlot({
-        drawPoints(dfHam)
-        drawLines(dg)
-      })
-    
-    ans<<-nrow(unique(dfHam))
-    updateTextInput(session,"answerInput",value="0")
-    disable("answerInput")
-    
-    #button display
-    shinyjs::hide("submitBtn")
-    shinyjs::show("nextBtn")
-  }
-  
-  udf=data.frame()
-  
-  #draw points
-  drawPoints = function(df){
-    #draw points
-    udf<<-unique(df)
-    row.names(udf) <- 1:nrow(udf)
-    plot(udf$y~udf$x,xlim=c(0,5),ylim=c(0,5),asp=1,pch = 21,cex = 5,bg=udf$bg,xlab="x",ylab="y")
-  }
-  
-  udg=data.frame()
-  
-  #draw lines
-  drawLines = function(dg){
-    udg <<- unique(dg)
-    colnames(udg) = c("a","b","c","d")
-    for(i in 1:(length(udg$a))){
-      segments(udg$a[i],udg$b[i],udg$c[i],udg$d[i])
-    }
-  }
 
-  observeEvent(input$plot_click,{
-    x=as.integer(round(input$plot_click$x,0))
-    y=as.integer(round(input$plot_click$y,0))
-    output$msgOutput = renderText(paste(x,y))
-    
-    #check if visit able
-    w=which(udf$x==x&udf$y==y)
-    if (udf$bg[w] != "yellow"){
-      if(sum(udf$bg=="red")!=0){
-        output$msgOutput = renderText(paste(x,y,"not nearby node!"))
-        return()
-      }
-    }
-    
-    ##clear yellow
-    for(i in 1:length(udf$bg)){
-      if(udf$bg[i]=="yellow"){
-        udf$bg[i]<<-"blue"
-      }
-    }
-    
-    #mark visted
-    udf$bg[w]<<-"red"   
-    
-    #get neighbor verts
-    rows = as.integer(rownames(dfHam[(dfHam$x==x&dfHam$y==y),]))
-
-    len = length(dfHam$bg)
-    for (r in rows){
-      
-      #mark previous row
-      pre=(r-1)%%len
-      if(pre<=0){pre=pre+len}
-      preCond = udf$x==dfHam$x[pre] & udf$y==dfHam$y[pre]
-      w = which(preCond,TRUE)
-      if(udf$bg[w]!="red"){
-        udf$bg[w]<<-"yellow"
-      }
-
-      #mark next row
-      post=(r+1)%%len
-      if(post<=0){post=post+len}
-      postCond = udf$x==dfHam$x[post] & udf$y==dfHam$y[post]
-      w = which(postCond,TRUE)
-      if(udf$bg[w]!="red"){
-        udf$bg[w]<<-"yellow"
-      }
-    }
-  
-    output$walk <- renderPlot({
-      drawPoints(udf)
-      drawLines(udg)
-    })
-    
-    v=sum(udf$bg=="red")
-    updateTextInput(session,"answerInput",value=v)
-    if(v==ans){
-      delay(200,showAnswer())
-    }
-  })
-  
-  
   ##D4 action
   d4Turn = 1
   config = "ABCD"
@@ -427,7 +257,6 @@ server <- function(session, input, output) {
     updateTextInput(session,"answerInput",value=config)
     d4Turn <<- d4Turn+1
     if (d4Turn>input$d4Slider){
-      #shinyjs::hide("submitBtn")
       shinyjs::hide("btnr")
       shinyjs::hide("btns")
       shinyjs::hide("btnt")
@@ -435,29 +264,406 @@ server <- function(session, input, output) {
       shinyjs::hide("btnx")
       shinyjs::hide("btny")
       shinyjs::hide("btnz")
-      #showAnswer()
       output$turnId <- renderText(paste("Out of Turns!"))
     } else {
       output$turnId <- renderText(paste("Turn",d4Turn))
     }
   }
   
+  #############end d4 action  
+  
+  ##Hamiltonian action
+  observeEvent(input$modalHamBtn, {
+    score <<- 0
+    cnt <<- 0
+    mode <<- "ham"   
+    clearText()
+    showModalHam()
+  })
+  
+  hamGrid = 15
+  dfHam = data.frame(matrix(ncol = 2, nrow = 0))  
+  showModalHam <- function() {
+    
+    #modal
+    showModal(modalDialog(id = "modalArith",
+                          h3("Hamiltonian Walk!"),
+                          plotOutput("walk",click = "plot_click",width=500,height=500),
+                          h3(numericInput("answerInput", "Visited:", ""), actionButton("submitBtn","Submit")),
+                          h3(uiOutput("msgOutput")),
+                          footer = tagList(
+                            h3(uiOutput("scoreOutput")),
+                            actionButton("nextBtn","Next"),
+                            actionButton("closeBtn","Exit")
+                          ),
+    ))
+    
+    #make points
+    g = list()
+    for(i in 1:(2*input$hamSlider)){
+      g[[i]] = sample(1:hamGrid,2,replace=TRUE)
+    }
+    
+    dfHam <<- data.frame(matrix(ncol = 2, nrow = 0))  
+    dfHam <<- rbind(dfHam,sample(g,1)[[1]])
+    
+    #sample points
+    while(nrow(unique(dfHam))<input$hamSlider && nrow((dfHam))<(2*input$hamSlider) ){
+      s = sample(g,1)[[1]]
+      if(s[1]==tail(dfHam)[1,1] && s[2]==tail(dfHam,1)[1,2]){
+        #skip
+      } else {
+        dfHam <<- rbind(dfHam,s)
+      }
+    }
+    dfHam <<- cbind(dfHam,replicate(length(dfHam[,1]),"blue"))
+    colnames(dfHam) <<- c("x","y","bg")
+    
+    #create lines
+    dg=data.frame(matrix(ncol = 4, nrow = 0))
+    for(i in 1:(length(dfHam$x)+1)){
+      a = i%%length(dfHam$x)+1
+      b = (i+1)%%length(dfHam$x)+1
+      
+      xa = dfHam$x[a]
+      ya = dfHam$y[a]
+      
+      xb = dfHam$x[b]
+      yb = dfHam$y[b]
+      
+      if (xa == xb && ya == yb){
+        #same point, skip
+      }else if (xa == xb){
+        dg = rbind(dg,c(xa,min(ya,yb),xb,max(ya,yb)))
+      } else if (dfHam$x[a] < dfHam$x[b]){
+        dg = rbind(dg,c(xa,ya,xb,yb))
+      } else {
+        dg = rbind(dg,c(xb,yb,xa,ya))
+      }
+    }
+    
+    output$walk <- renderPlot({
+      drawPoints(dfHam)
+      drawLines(dg)
+    })
+    
+    ans<<-nrow(unique(dfHam))
+    updateTextInput(session,"answerInput",value="0")
+    disable("answerInput")
+    
+    #button display
+    shinyjs::hide("submitBtn")
+    shinyjs::show("nextBtn")
+  }
+  
+  #draw points
+  udf=data.frame()
+  drawPoints = function(df){
+    #draw points
+    udf<<-unique(df)
+    row.names(udf) <- 1:nrow(udf)
+    plot(udf$y~udf$x,xlim=c(0,hamGrid),ylim=c(0,hamGrid),asp=1,pch = 21,cex = 5,bg=udf$bg,xlab="x",ylab="y")
+  }
+  
+  #draw lines
+  udg=data.frame()
+  drawLines = function(dg){
+    udg <<- unique(dg)
+    colnames(udg) = c("a","b","c","d")
+    for(i in 1:(length(udg$a))){
+      segments(udg$a[i],udg$b[i],udg$c[i],udg$d[i])
+    }
+  }
+  
+  observeEvent(input$plot_click,{
+    x=as.integer(round(input$plot_click$x,0))
+    y=as.integer(round(input$plot_click$y,0))
+    output$msgOutput = renderText(paste(x,y))
+    
+    #check if visit able
+    w=which(udf$x==x&udf$y==y)
+    if (length(w)==0){
+      output$msgOutput = renderText(paste(x,y,"not nearby node!"))
+      return()
+    }
+    if (udf$bg[w] != "yellow"){
+      if(sum(udf$bg=="red")!=0){
+        output$msgOutput = renderText(paste(x,y,"not nearby node!"))
+        return()
+      }
+    }
+    
+    ##clear yellow
+    for(i in 1:length(udf$bg)){
+      if(udf$bg[i]=="yellow"){
+        udf$bg[i]<<-"blue"
+      }
+    }
+    
+    #mark visted
+    udf$bg[w]<<-"red"   
+    
+    #get neighbor verts
+    rows = as.integer(rownames(dfHam[(dfHam$x==x&dfHam$y==y),]))
+    
+    len = length(dfHam$bg)
+    for (r in rows){
+      
+      #mark previous row
+      pre=(r-1)%%len
+      if(pre<=0){pre=pre+len}
+      preCond = udf$x==dfHam$x[pre] & udf$y==dfHam$y[pre]
+      w = which(preCond,TRUE)
+      if(udf$bg[w]!="red"){
+        udf$bg[w]<<-"yellow"
+      }
+      
+      #mark next row
+      post=(r+1)%%len
+      if(post<=0){post=post+len}
+      postCond = udf$x==dfHam$x[post] & udf$y==dfHam$y[post]
+      w = which(postCond,TRUE)
+      if(udf$bg[w]!="red"){
+        udf$bg[w]<<-"yellow"
+      }
+    }
+    
+    output$walk <- renderPlot({
+      drawPoints(udf)
+      drawLines(udg)
+    })
+    
+    v=sum(udf$bg=="red")
+    updateTextInput(session,"answerInput",value=v)
+    if(v==ans){
+      delay(200,showAnswer())
+    }
+  })
+  ############end ham action  
+
+  
+  ##Euler action
+  observeEvent(input$modalEulerBtn, {
+    score <<- 0
+    cnt <<- 0
+    mode <<- "euler"   
+    clearText()
+    showModalEuler()
+  })
+  
+  showModalEuler <- function() {
+    #modal
+    showModal(modalDialog(id = "modalArith",
+                          h3("Euler Walk!"),
+                          plotOutput("walkE",click = "plot_clickE",width=500,height=500),
+                          h3(numericInput("answerInput", "Visited:", ""), actionButton("submitBtn","Submit")),
+                          h3(uiOutput("msgOutput")),
+                          footer = tagList(
+                            h3(uiOutput("scoreOutput")),
+                            actionButton("nextBtn","Next"),
+                            actionButton("closeBtn","Exit")
+                          ),
+    ))
+    
+    eulerSample()
+    
+    output$walkE <- renderPlot({
+      eulerPoints(dfE)
+      eulerLines(dgE)
+    })
+    
+    ans<<-nrow(unique(dfE))
+    updateTextInput(session,"answerInput",value="0")
+    disable("answerInput")
+    
+    #button display
+    shinyjs::hide("submitBtn")
+    shinyjs::show("nextBtn")
+    
+    ans<<-nrow(unique(dgE))
+  }
+  
+  gridEuler = 20
+  dfE=data.frame()
+  dgE=data.frame()
+  
+  ##euler sample data
+  eulerSample = function(){
+    #make points
+    g = list()
+    for(i in 1:(2*input$eulerSlider)){
+      g[[i]] = sample(1:gridEuler,2)
+    }
+    dfE <<- data.frame(matrix(ncol = 2, nrow = 0))  
+    dfE <<- rbind(dfE,sample(g,1)[[1]])
+    #sample points
+    while(nrow(unique(dfE))<input$eulerSlider&&nrow(dfE)<(2*input$eulerSlider)){
+      s = sample(g,1)[[1]]
+      if(s[1]==tail(dfE)[1,1] && s[2]==tail(dfE,1)[1,2]){
+        #skip
+      } else {
+        dfE <<- rbind(dfE,s)
+      }
+    }
+    dfE <<- cbind(dfE,replicate(length(dfE[,1]),"blue"))
+    colnames(dfE) <<- c("x","y","bg")
+    #create lines
+    dgE<<-data.frame(matrix(ncol = 4, nrow = 0))
+    for(i in 1:(length(dfE$x)+1)){
+      a = i%%length(dfE$x)+1
+      b = (i+1)%%length(dfE$x)+1
+      xa = dfE$x[a]
+      ya = dfE$y[a]
+      xb = dfE$x[b]
+      yb = dfE$y[b]
+      if (xa == xb && ya == yb){
+        #same point, skip
+      }else if (xa == xb){
+        dgE <<- rbind(dgE,c(xa,min(ya,yb),xb,max(ya,yb)))
+      } else if (dfE$x[a] < dfE$x[b]){
+        dgE <<- rbind(dgE,c(xa,ya,xb,yb))
+      } else {
+        dgE <<- rbind(dgE,c(xb,yb,xa,ya))
+      }
+    }
+    dgE <<- cbind(dgE,replicate(length(dgE[,1]),"blue"))
+    colnames(dgE) <<- c("a","b","c","d","bg")
+  }
+  
+  #euler draw points
+  udfE=data.frame()
+  eulerPoints = function(dfE){
+    #draw points
+    udfE<<-unique(dfE)
+    row.names(udfE) <- 1:nrow(udfE)
+    plot(udfE$y~udfE$x,xlim=c(0,gridEuler),ylim=c(0,gridEuler),asp=1,pch=21,cex=2,bg=udfE$bg,xlab="x",ylab="y")
+  }
+  
+  #euler draw lines
+  udgE=data.frame()
+  eulerLines = function(dgE){
+    udgE <<- unique(dgE)
+    row.names(udgE) <- 1:nrow(udgE)
+    colnames(udgE) <<- c("a","b","c","d","bg")
+    for(i in 1:(length(udgE$a))){
+      segments(udgE$a[i],udgE$b[i],udgE$c[i],udgE$d[i],col=udgE$bg[i],lwd=3)
+    }
+  }
+  
+  #linear distance
+  distance <- function (x1,y1,x2,y2){
+    d = ((x1-x2)^2 + (y1-y2)^2)^0.5
+    return (d)
+  }
+  
+  prevRow=1
+  #euler plot click
+  observeEvent(input$plot_clickE,{
+    ra=sample(c(1,nrow(udgE)),1)
+    if(ra==1){rb=nrow(udgE)}else{rb=1}
+    for (row in ra:rb){
+      
+      x = input$plot_clickE$x
+      y = input$plot_clickE$y 
+      
+      a = udgE$a[row]
+      b = udgE$b[row]
+      c = udgE$c[row]
+      d = udgE$d[row]
+      
+      xa = udgE$a[row]
+      ya = udgE$b[row]
+      xb = udgE$c[row]
+      yb = udgE$d[row]
+      
+      e = distance(x,y,xa,ya)
+      f = distance(x,y,xb,yb)
+      ef = distance(xa,ya,xb,yb)
+      
+      #if edge is clicked
+      epsil = .05
+      if ((ef-epsil)<(e+f) && (e+f)<(ef+epsil)){
+          output$msgOutput <- renderText(paste(as.integer(x),as.integer(y),"Edge Selected"))
+          #if already red
+          if(udgE$bg[row]=="red"){
+            return()
+          }
+          #check if visit able
+          if (udgE$bg[row]=="blue"){
+            if(sum(udgE$bg=="red")!=0){
+              output$msgOutput = renderText(paste(as.integer(round(x,0)),as.integer(round(y,0)),"not nearby edge!"))
+              return()
+            }
+          }
+          #mark selected row
+          udgE$bg[row] <<- "red"
+          ##clear yellow
+          for(i in 1:length(udgE$bg)){
+            if(udgE$bg[i]=="yellow"){
+              udgE$bg[i]<<-"blue"
+            }
+          }            
+          #shared point between row and previous
+          if(sum(udgE$bg=="red")!=1){
+            if(a==udgE$a[prevRow]&&b==udgE$b[prevRow]||
+               a==udgE$c[prevRow]&&b==udgE$d[prevRow]
+               ){
+              sharedX=a
+              sharedY=b
+            } else {
+              sharedX=c
+              sharedY=d
+            }
+          }
+          prevRow<<-row
+          #find touching rows
+          for (r in 1:nrow(udgE)){
+            if(udgE$bg[r]=="red"){
+              #red, skip
+            }
+            
+            else if(  #touches line
+                 (udgE$a[r]==a&udgE$b[r]==b) ||
+                 (udgE$c[r]==a&udgE$d[r]==b) || 
+                 (udgE$a[r]==c&udgE$b[r]==d) ||
+                 (udgE$c[r]==c&udgE$d[r]==d)){
+                      if(sum(udgE$bg=="red")==1){
+                          #beginning, can visit
+                          udgE$bg[r]<<-"yellow"
+                      }else if(  #touches previous shared point
+                       (sharedX==udgE$a[r]&sharedY==udgE$b[r]) ||
+                       (sharedX==udgE$c[r]&sharedY==udgE$d[r])){
+                          #cannot visit
+                      }else{
+                          #can visit
+                          udgE$bg[r]<<-"yellow"
+                      }##endif
+                  }##endif
+           }##endfor
+          #plot new colors
+          output$walkE <- renderPlot({
+            eulerPoints(udfE)
+            eulerLines(udgE)
+          })
+          #check if all are clicked
+          v=sum(udgE$bg=="red")
+          updateTextInput(session,"answerInput",value=v)
+          if(v==ans){
+            delay(200,showAnswer())
+          }
+          return()#early stopping, one edge already clicked
+      } else {
+        # if edge was not clicked, show coordinates of where clicked
+        output$msgOutput <- renderText(paste(as.integer(x),as.integer(y)))
+      } #endif
+    } #endfor
+  })
+  
+  #############end Euler action  
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+  #####Project 1st Half
+  ####common functions
   #Variables that are shared among server functions (use <<-)
   ans = 0
   score = 0
@@ -499,6 +705,7 @@ server <- function(session, input, output) {
     else if(mode=="cyclic"){showModalCyclic()}
     else if(mode=="d4"){showModalD4()}
     else if(mode=="ham"){showModalHam()}
+    else if(mode=="euler"){showModalEuler()}
     else(removeModal())
   })
   
@@ -511,6 +718,7 @@ server <- function(session, input, output) {
       output$ctrlB <- renderUI(actionBttn("btnadd","Add Flight!"))
     }
   })
+  #####end common functions
   
   ##arithmetic action
   observeEvent(input$modalArithBtn, {
@@ -550,6 +758,7 @@ server <- function(session, input, output) {
     shinyjs::show("submitBtn")
     shinyjs::hide("nextBtn")
   }
+  #####end arithmetic action
     
   ##matrix action
   observeEvent(input$modalMatrixBtn, {
@@ -602,6 +811,7 @@ server <- function(session, input, output) {
     shinyjs::show("submitBtn")
     shinyjs::hide("nextBtn")
   }
+  ####end matrix action
   
   ##cyclic action
   observeEvent(input$modalCyclicBtn, {
@@ -642,10 +852,10 @@ server <- function(session, input, output) {
     shinyjs::show("submitBtn")
     shinyjs::hide("nextBtn")
   }
-  
+  ######end cylic action
 
 
-  ##Airmiles
+  #####Airmiles
   
   clearText <- function(){
     output$scoreOutput = renderUI("")
